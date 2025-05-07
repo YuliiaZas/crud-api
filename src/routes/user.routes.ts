@@ -28,6 +28,9 @@ export async function handleUserRoutes(
         return await handleCreateUser(res, body);
       }
     } else if (pathParts.length === 3 && pathParts[1] === 'users') {
+      if (method !== 'GET' && method !== 'PUT' && method !== 'DELETE') {
+        return notFoundHandler(res);
+      }
       const userId = validateId(pathParts[2]);
 
       if (method === 'GET') return await handleGetUserById(res, userId);
@@ -40,7 +43,6 @@ export async function handleUserRoutes(
 
     notFoundHandler(res);
   } catch (error: unknown) {
-    console.log('[ERROR]', error);
     if (error instanceof InvalidBodyError || error instanceof InvalidIdError) {
       badRequestHandler(res, error.message);
     } else {
