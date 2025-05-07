@@ -1,13 +1,5 @@
 {
-  "ignore": [
-    "node_modules/**",
-    "build/**"
-  ],
+  "ignore": ["node_modules/**", "build/**"],
   "exec": "npm start",
-  "watch": [
-    "index.ts",
-    "src/**",
-    "package.json",
-    "tsconfig.json"
-  ]
+  "watch": ["index.ts", "src/**", "package.json", "tsconfig.json"]
 }
