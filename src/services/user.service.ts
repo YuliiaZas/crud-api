@@ -14,11 +14,14 @@ export function createUser(data: Omit<User, 'id'>): User {
 }
 
 export function getUserById(id: string): User | undefined {
-  return users.find(user => user.id === id);
+  return users.find((user) => user.id === id);
 }
 
-export function updateUserById(id: string, data: Omit<User, 'id'>): User | undefined {
-  const index = users.findIndex(user => user.id === id);
+export function updateUserById(
+  id: string,
+  data: Omit<User, 'id'>,
+): User | undefined {
+  const index = users.findIndex((user) => user.id === id);
   if (index === -1) return undefined;
 
   const updatedUser: User = { id, ...data };
@@ -27,7 +30,7 @@ export function updateUserById(id: string, data: Omit<User, 'id'>): User | undef
 }
 
 export function deleteUserById(id: string): boolean {
-  const index = users.findIndex(user => user.id === id);
+  const index = users.findIndex((user) => user.id === id);
   if (index === -1) return false;
 
   users.splice(index, 1);
