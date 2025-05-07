@@ -27,7 +27,9 @@ if (cluster.isPrimary) {
     console.log(`[PRIMARY] Worker ${worker.process.pid} is online`);
     onlineWorkers++;
     if (onlineWorkers === WORKERS_COUNT) {
-      console.log(`[PRIMARY] 👷 All ${WORKERS_COUNT} workers are online. Please wait for the servers`);
+      console.log(
+        `[PRIMARY] 👷 All ${WORKERS_COUNT} workers are online. Please wait for the servers`,
+      );
     }
   });
 
@@ -42,11 +44,15 @@ if (cluster.isPrimary) {
     if (port !== undefined) {
       const attempts = (workerInfo as WorkerInfo).attempts;
       if (attempts < MAX_RESTARTS) {
-        console.log(`[PRIMARY] 🔁 Restarting worker on PORT ${port} (attempt ${attempts + 1})...`);
+        console.log(
+          `[PRIMARY] 🔁 Restarting worker on PORT ${port} (attempt ${attempts + 1})...`,
+        );
         forkWorker(port, attempts + 1);
         workerMapById.delete(worker.id);
       } else {
-        console.error(`[PRIMARY] ❌ Max restart attempts (${MAX_RESTARTS}) reached for PORT ${port}. No longer restarting.`);
+        console.error(
+          `[PRIMARY] ❌ Max restart attempts (${MAX_RESTARTS}) reached for PORT ${port}. No longer restarting.`,
+        );
         ports.splice(ports.indexOf(port), 1);
       }
     }
@@ -55,12 +61,16 @@ if (cluster.isPrimary) {
   const balancer = createBalancer();
 
   balancer.listen(HOST_PORT, () => {
-    console.log(`[PRIMARY] 🌐 Load balancer is running on http://localhost:${HOST_PORT}`);
+    console.log(
+      `[PRIMARY] 🌐 Load balancer is running on http://localhost:${HOST_PORT}`,
+    );
   });
 } else {
   const workerPort = Number(process.env.PORT);
   const server = http.createServer((req, res) => {
-    console.log(`[WORKER ${process.pid}] Request handled on PORT ${workerPort}`);
+    console.log(
+      `[WORKER ${process.pid}] Request handled on PORT ${workerPort}`,
+    );
     // for revievers: if you want to check what's going on when the server crashes just uncomment the next
     // lines and make a request to /api/crash
     // if (req.url?.startsWith('/api/crash')) {
@@ -70,7 +80,9 @@ if (cluster.isPrimary) {
     app(req, res);
   });
   server.listen(workerPort, () => {
-    console.log(`[WORKER ${process.pid}] ✅ Server is running on PORT ${workerPort}`);
+    console.log(
+      `[WORKER ${process.pid}] ✅ Server is running on PORT ${workerPort}`,
+    );
   });
 }
 
@@ -95,9 +107,13 @@ function createBalancer(): Server {
     req.pipe(proxyReq, { end: true });
 
     proxyReq.on('error', (err) => {
-      badGatewayHandler(res, err, `[Balancer Error] ❌ Worker on PORT ${currentPort} failed:`);
+      badGatewayHandler(
+        res,
+        err,
+        `[Balancer Error] ❌ Worker on PORT ${currentPort} failed:`,
+      );
     });
-  })
+  });
 }
 
 function forkWorker(port: number, attempts = 0): Worker {
