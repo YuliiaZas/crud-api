@@ -1,26 +1,35 @@
+import { randomUUID } from 'crypto';
 import { User } from '../models/user.model';
 
+const users: User[] = [];
+
 export function getUsers(): User[] {
-  console.log('getUsers');
-  return [];
+  return users;
 }
 
-export function createUser(user: User): User {
-  console.log('createUser', user);
-  return {} as User;
+export function createUser(data: Omit<User, 'id'>): User {
+  const newUser: User = { id: randomUUID(), ...data };
+  users.push(newUser);
+  return newUser;
 }
 
-export function getUserById(userId: string): User | null {
-  console.log('getUserById', userId);
-  return null;
+export function getUserById(id: string): User | undefined {
+  return users.find(user => user.id === id);
 }
 
-export function updateUserById(userId: string, user: User): User | null {
-  console.log('updateUserById', userId, user);
-  return null;
+export function updateUserById(id: string, data: Omit<User, 'id'>): User | undefined {
+  const index = users.findIndex(user => user.id === id);
+  if (index === -1) return undefined;
+
+  const updatedUser: User = { id, ...data };
+  users[index] = updatedUser;
+  return updatedUser;
 }
 
-export function deleteUserById(userId: string): User | null {
-  console.log('deleteUserById', userId);
-  return null;
+export function deleteUserById(id: string): boolean {
+  const index = users.findIndex(user => user.id === id);
+  if (index === -1) return false;
+
+  users.splice(index, 1);
+  return true;
 }
