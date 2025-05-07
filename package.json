@@ -18,6 +18,7 @@
     "build": "tsc",
     "start:dev": "nodemon",
     "start:prod": "npm run build && node index.ts",
+    "start:multi": "ts-node multi.ts",
     "start": "npm run start:dev",
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix",
