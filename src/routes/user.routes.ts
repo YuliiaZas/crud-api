@@ -22,23 +22,35 @@ export async function handleUserRoutes(
 
   try {
     if (pathParts.length === 2 && pathParts[1] === 'users') {
-      if (method === 'GET') return handleGetAllUsers(res);
+      if (method === 'GET') {
+        await handleGetAllUsers(res);
+        return;
+      }
       if (method === 'POST') {
         const body = await parseRequestBody(req);
-        return handleCreateUser(res, body);
+        await handleCreateUser(res, body);
+        return;
       }
     } else if (pathParts.length === 3 && pathParts[1] === 'users') {
       if (method !== 'GET' && method !== 'PUT' && method !== 'DELETE') {
-        return notFoundHandler(res);
+        notFoundHandler(res);
+        return;
       }
       const userId = validateId(pathParts[2]);
 
-      if (method === 'GET') return handleGetUserById(res, userId);
+      if (method === 'GET') {
+        await handleGetUserById(res, userId);
+        return;
+      }
       if (method === 'PUT') {
         const body = await parseRequestBody(req);
-        return handleUpdateUserById(res, userId, body);
+        await handleUpdateUserById(res, userId, body);
+        return;
       }
-      if (method === 'DELETE') return handleDeleteUserById(res, userId);
+      if (method === 'DELETE'){
+        await handleDeleteUserById(res, userId);
+        return;
+      }
     }
 
     notFoundHandler(res);

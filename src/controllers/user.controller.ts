@@ -10,12 +10,12 @@ import { sendJson, sendEmpty } from '../utils/response';
 import { validateUser } from '../utils/validate';
 import { User } from '../models/user.model';
 
-export function handleGetAllUsers(res: ServerResponse) {
-  sendJson(res, 200, getUsers());
+export async function handleGetAllUsers(res: ServerResponse) {
+  sendJson(res, 200, await getUsers());
 }
 
-export function handleGetUserById(res: ServerResponse, id: string) {
-  const user = getUserById(id);
+export async function handleGetUserById(res: ServerResponse, id: string) {
+  const user = await getUserById(id);
   if (!user) {
     sendJson(res, 404, { message: 'User not found' });
     return;
@@ -23,17 +23,17 @@ export function handleGetUserById(res: ServerResponse, id: string) {
   sendJson(res, 200, user);
 }
 
-export function handleCreateUser(res: ServerResponse, body: User) {
-  const newUser = createUser(validateUser(body));
+export async function handleCreateUser(res: ServerResponse, body: User) {
+  const newUser = await createUser(validateUser(body));
   sendJson(res, 201, newUser);
 }
 
-export function handleUpdateUserById(
+export async function handleUpdateUserById(
   res: ServerResponse,
   id: string,
   body: User,
 ) {
-  const updatedUser = updateUserById(id, validateUser(body));
+  const updatedUser = await updateUserById(id, validateUser(body));
   if (!updatedUser) {
     sendJson(res, 404, { message: 'User not found' });
     return;
@@ -41,8 +41,8 @@ export function handleUpdateUserById(
   sendJson(res, 200, updatedUser);
 }
 
-export function handleDeleteUserById(res: ServerResponse, id: string) {
-  if (!deleteUserById(id)) {
+export async function handleDeleteUserById(res: ServerResponse, id: string) {
+  if (!await deleteUserById(id)) {
     sendJson(res, 404, { message: 'User not found' });
     return;
   }
