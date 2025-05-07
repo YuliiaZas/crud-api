@@ -47,8 +47,8 @@ if (cluster.isPrimary) {
         console.log(
           `[PRIMARY] 🔁 Restarting worker on PORT ${port} (attempt ${attempts + 1})...`,
         );
-        forkWorker(port, attempts + 1);
         workerMapById.delete(worker.id);
+        forkWorker(port, attempts + 1);
       } else {
         console.error(
           `[PRIMARY] ❌ Max restart attempts (${MAX_RESTARTS}) reached for PORT ${port}. No longer restarting.`,
