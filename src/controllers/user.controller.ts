@@ -42,7 +42,7 @@ export async function handleUpdateUserById(
 }
 
 export async function handleDeleteUserById(res: ServerResponse, id: string) {
-  if (!await deleteUserById(id)) {
+  if (!(await deleteUserById(id))) {
     sendJson(res, 404, { message: 'User not found' });
     return;
   }

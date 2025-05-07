@@ -47,7 +47,7 @@ export async function handleUserRoutes(
         await handleUpdateUserById(res, userId, body);
         return;
       }
-      if (method === 'DELETE'){
+      if (method === 'DELETE') {
         await handleDeleteUserById(res, userId);
         return;
       }
