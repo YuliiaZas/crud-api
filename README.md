@@ -43,6 +43,10 @@ npm start:prod
 ```bash
 npm start:multi
 ```
+- in production mode with clustering
+```bash
+npm start:multi:prod
+```
 
 ## 📦 API Endpoints
 The API provides a set of endpoints for managing user data. The following endpoints are available:
@@ -89,7 +93,7 @@ Delete a user by ID
   
 Response: HTTP 204 (No Content)
 
-## 🛠 Cluster-Based CRUD API (`npm run start:multi`)
+## 🛠 Cluster-Based CRUD API (`npm run start:multi`, `npm run start:multi:prod`)
 This mode is designed to run the application in a clustered environment, allowing for better performance and fault tolerance. It utilizes Node.js's built-in clustering module to create multiple worker processes that can handle incoming requests concurrently.
 After startup:
 - Load balancer listens on a base port (e.g. http://localhost:3000)
