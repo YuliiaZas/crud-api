@@ -15,11 +15,13 @@
   "type": "commonjs",
   "main": "index.js",
   "scripts": {
-    "build": "tsc",
     "start:dev": "nodemon",
-    "start:prod": "npm run build && node index.ts",
+    "start:prod": "npm run build && node build/index.js",
     "start:multi": "ts-node multi.ts",
+    "start:multi:prod": "npm run build && node build/multi.js",
     "start": "npm run start:dev",
+    "build": "tsc && npm run copy-data",
+    "copy-data": "mkdir -p build/src/data && cp src/data/db.json build/src/data/db.json",
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix",
     "format": "prettier --write ."

@@ -8,5 +8,5 @@
     "esModuleInterop": true,
     "skipLibCheck": true
   },
-  "include": ["index.ts", "src"]
+  "include": ["index.ts", "multi.ts", "src"]
 }
