@@ -72,3 +72,14 @@ async function readUsers(): Promise<User[]> {
 async function writeUsers(users: User[]): Promise<void> {
   await writeFile(FILE_PATH, JSON.stringify(users, null, 2));
 }
+
+export async function initEmptyDb(): Promise<void> {
+  console.log('Initializing empty database...');
+  try {
+    await setLock();
+    await writeUsers([]);
+    await removeLock();
+  } catch (err: unknown) {
+    console.error('Error initializing database:', err);
+  }
+}

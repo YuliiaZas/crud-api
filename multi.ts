@@ -6,71 +6,16 @@ import { getPort } from './src/utils/port';
 import { app } from './src/app';
 import { badGatewayHandler } from './src/utils/errorHandler';
 import { WorkerInfo } from './src/utils/types';
-
-const HOST_PORT = getPort();
-const WORKERS_COUNT = cpus().length - 1;
-const MAX_RESTARTS = 2;
-
-let onlineWorkers = 0;
-const workerMapById: Map<number, WorkerInfo> = new Map();
-
-const ports: number[] = [];
-let currentPortIndex = 0;
+import { initEmptyDb } from './src/services/user.service';
+import { MESSAGES } from './src/utils/messages';
 
 if (cluster.isPrimary) {
-  for (let i = 1; i <= WORKERS_COUNT; i++) {
-    forkWorker(HOST_PORT + i);
-    ports.push(HOST_PORT + i);
-  }
-
-  cluster.on('online', (worker) => {
-    console.log(`[PRIMARY] Worker ${worker.process.pid} is online`);
-    onlineWorkers++;
-    if (onlineWorkers === WORKERS_COUNT) {
-      console.log(
-        `[PRIMARY] 👷 All ${WORKERS_COUNT} workers are online. Please wait for the servers`,
-      );
-    }
-  });
-
-  cluster.on('exit', (worker, code, signal) => {
-    onlineWorkers--;
-    const workerInfo = workerMapById.get(worker.id);
-    const port = workerInfo?.port;
-    console.warn(
-      `[PRIMARY] ⚠️ Worker ${worker.process.pid} exited (code: ${code}, signal: ${signal}) on PORT ${port}`,
-    );
-
-    if (port !== undefined) {
-      const attempts = (workerInfo as WorkerInfo).attempts;
-      if (attempts < MAX_RESTARTS) {
-        console.log(
-          `[PRIMARY] 🔁 Restarting worker on PORT ${port} (attempt ${attempts + 1})...`,
-        );
-        workerMapById.delete(worker.id);
-        forkWorker(port, attempts + 1);
-      } else {
-        console.error(
-          `[PRIMARY] ❌ Max restart attempts (${MAX_RESTARTS}) reached for PORT ${port}. No longer restarting.`,
-        );
-        ports.splice(ports.indexOf(port), 1);
-      }
-    }
-  });
-
-  const balancer = createBalancer();
-
-  balancer.listen(HOST_PORT, () => {
-    console.log(
-      `[PRIMARY] 🌐 Load balancer is running on http://localhost:${HOST_PORT}`,
-    );
-  });
+  startPrimaryProcess();
 } else {
   const workerPort = Number(process.env.PORT);
+
   const server = http.createServer((req, res) => {
-    console.log(
-      `[WORKER ${process.pid}] Request handled on PORT ${workerPort}`,
-    );
+    console.log(MESSAGES.REQUEST(process.pid, workerPort));
     // for revievers: if you want to check what's going on when the server crashes just uncomment the next
     // lines and make a request to /api/crash
     // if (req.url?.startsWith('/api/crash')) {
@@ -79,17 +24,86 @@ if (cluster.isPrimary) {
     // }
     app(req, res);
   });
-  server.listen(workerPort, () => {
-    console.log(
-      `[WORKER ${process.pid}] ✅ Server is running on PORT ${workerPort}`,
-    );
-  });
+
+  server.listen(workerPort, () =>
+    console.log(MESSAGES.SERVER_RUNNING(process.pid, workerPort)),
+  );
 }
 
-function createBalancer(): Server {
-  return http.createServer((req, res) => {
-    const currentPort = ports[currentPortIndex];
+async function startPrimaryProcess() {
+  const HOST_PORT = getPort();
+  const WORKERS_COUNT = cpus().length - 1;
+  const MAX_RESTARTS = 2;
+
+  let onlineWorkers = 0;
+  const workerMapById: Map<number, WorkerInfo> = new Map();
+
+  const ports: number[] = [];
+  let currentPortIndex = 0;
+
+  await initEmptyDb();
+
+  for (let i = 1; i <= WORKERS_COUNT; i++) {
+    forkWorker(HOST_PORT + i);
+    ports.push(HOST_PORT + i);
+  }
+
+  cluster.on('online', (worker) => {
+    console.log(MESSAGES.WORKER_ONLINE(worker.process.pid!));
+    onlineWorkers++;
+    if (onlineWorkers === WORKERS_COUNT) {
+      console.log(MESSAGES.WORKERS_ALL(WORKERS_COUNT));
+    }
+  });
+
+  cluster.on('exit', (worker, code, signal) => {
+    onlineWorkers--;
+    const workerInfo = workerMapById.get(worker.id);
+    const port = workerInfo?.port;
+    console.warn(
+      MESSAGES.WORKER_EXIT(
+        worker.process.pid!,
+        code ?? -1,
+        signal ?? 'unknown',
+        port ?? -1,
+      ),
+    );
+
+    if (port !== undefined) {
+      const attempts = (workerInfo as WorkerInfo).attempts;
+      if (attempts < MAX_RESTARTS) {
+        console.log(MESSAGES.WORKER_RESTART(port, attempts));
+        workerMapById.delete(worker.id);
+        forkWorker(port, attempts + 1);
+      } else {
+        console.error(MESSAGES.MAX_RESTART_REACHED(port));
+        ports.splice(ports.indexOf(port), 1);
+      }
+    }
+  });
+
+  const balancer = createBalancer(getNextPort);
+
+  balancer.listen(HOST_PORT, () => {
+    console.log(MESSAGES.BALANCER_RUNNING(HOST_PORT));
+  });
+
+  function getNextPort(): number {
+    const port = ports[currentPortIndex];
     currentPortIndex = (currentPortIndex + 1) % ports.length;
+    return port;
+  }
+
+  function forkWorker(port: number, attempts = 0): Worker {
+    const worker = cluster.fork({ PORT: port.toString() });
+    workerMapById.set(worker.id, { id: worker.id, port, attempts });
+    return worker;
+  }
+}
+
+function createBalancer(getNextPort: () => number): Server {
+  return http.createServer((req, res) => {
+    const currentPort = getNextPort();
 
     const options: RequestOptions = {
       hostname: 'localhost',
@@ -107,17 +121,7 @@ function createBalancer(): Server {
     req.pipe(proxyReq, { end: true });
 
     proxyReq.on('error', (err) => {
-      badGatewayHandler(
-        res,
-        err,
-        `[Balancer Error] ❌ Worker on PORT ${currentPort} failed:`,
-      );
+      badGatewayHandler(res, err, MESSAGES.BALANCER_ERROR(currentPort));
     });
   });
-}
-
-function forkWorker(port: number, attempts = 0): Worker {
-  const worker = cluster.fork({ PORT: port.toString() });
-  workerMapById.set(worker.id, { id: worker.id, port, attempts });
-  return worker;
 }
