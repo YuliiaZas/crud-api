@@ -21,6 +21,6 @@ if (cluster.isPrimary) {
   });
 
   server.listen(workerPort, () =>
-    console.log(MESSAGES.SERVER_RUNNING(process.pid, workerPort)),
+    console.log(MESSAGES.SERVER_RUNNING(workerPort, process.pid)),
   );
 }

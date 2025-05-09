@@ -3,6 +3,7 @@ import { randomUUID } from 'crypto';
 import { User, UserDto } from '../models/user.model';
 import { removeLock, setLock } from './userDbLock.service';
 import { DB_PATH } from '../utils/paths';
+import { MESSAGES } from '../utils/messages';
 
 export async function getUsers(): Promise<User[]> {
   await setLock();
@@ -68,9 +69,7 @@ async function readUsers(): Promise<User[]> {
     return JSON.parse(data || '[]');
   } catch (error: unknown) {
     if ((error as { code?: string }).code === 'ENOENT') {
-      console.log(
-        'Database file not found while reading. Creating a new one...',
-      );
+      console.log(MESSAGES.DB_NOT_FOUND(DB_PATH));
       await writeUsers([]);
       return [];
     }
@@ -86,7 +85,7 @@ export async function ensureDbExists(): Promise<void> {
   try {
     await access(DB_PATH, constants.F_OK);
   } catch {
-    console.log('Database file does not exist. Creating a new one...');
+    console.log(MESSAGES.DB_NOT_FOUND(DB_PATH));
     await writeUsers([]);
   }
 }

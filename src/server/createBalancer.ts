@@ -1,6 +1,7 @@
 import http, { RequestOptions, Server } from 'node:http';
 import { badGatewayHandler } from '../utils/errorHandler';
 import { MESSAGES } from '../utils/messages';
+import { Status } from '../utils/status.enum';
 
 export function createBalancer(getNextPort: () => number): Server {
   return http.createServer((req, res) => {
@@ -15,7 +16,7 @@ export function createBalancer(getNextPort: () => number): Server {
     };
 
     const proxyReq = http.request(options, (proxyRes) => {
-      res.writeHead(proxyRes.statusCode || 200, proxyRes.headers);
+      res.writeHead(proxyRes.statusCode || Status.OK, proxyRes.headers);
       proxyRes.pipe(res, { end: true });
     });
 

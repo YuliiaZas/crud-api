@@ -1,4 +1,6 @@
 import { ServerResponse } from 'node:http';
+import { ERROR_MESSAGES } from './messages';
+import { Status } from './status.enum';
 
 export function sendJson(
   res: ServerResponse,
@@ -15,7 +17,16 @@ export function sendJson(
   res.end(json);
 }
 
-export function sendEmpty(res: ServerResponse, statusCode = 204): void {
+export function sendNotFound(res: ServerResponse, id: string): void {
+  sendJson(res, Status.NOT_FOUND, {
+    message: ERROR_MESSAGES.USER_NOT_FOUND(id),
+  });
+}
+
+export function sendEmpty(
+  res: ServerResponse,
+  statusCode = Status.NO_CONTENT,
+): void {
   res.writeHead(statusCode);
   res.end();
 }

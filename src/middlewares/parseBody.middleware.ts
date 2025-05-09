@@ -1,5 +1,6 @@
 import { IncomingMessage } from 'http';
 import { InvalidBodyError } from '../utils/errors';
+import { VALIDATION_MESSAGES } from '../utils/messages';
 
 export async function parseRequestBody(req: IncomingMessage): Promise<any> {
   return new Promise((resolve, reject) => {
@@ -12,7 +13,7 @@ export async function parseRequestBody(req: IncomingMessage): Promise<any> {
         const errorMessage =
           err instanceof Error ? err.message : 'Unknown error';
         reject(
-          new InvalidBodyError(`Invalid JSON for passed body: ${errorMessage}`),
+          new InvalidBodyError(VALIDATION_MESSAGES.INVALID_JSON(errorMessage)),
         );
       }
     });
