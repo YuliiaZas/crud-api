@@ -1,9 +1,10 @@
-import { access, constants, readFile, writeFile } from 'node:fs/promises';
+import { access, constants, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { randomUUID } from 'crypto';
 import { User, UserDto } from '../models/user.model';
 import { removeLock, setLock } from './userDbLock.service';
 import { DB_PATH } from '../utils/paths';
 import { MESSAGES } from '../utils/messages';
+import { dirname } from 'node:path';
 
 export async function getUsers(): Promise<User[]> {
   await setLock();
@@ -78,6 +79,7 @@ async function readUsers(): Promise<User[]> {
 }
 
 async function writeUsers(users: User[]): Promise<void> {
+  await mkdir(dirname(DB_PATH), { recursive: true });
   await writeFile(DB_PATH, JSON.stringify(users, null, 2));
 }
 

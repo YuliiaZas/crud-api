@@ -3,6 +3,20 @@
 This project is a simple CRUD API using in-memory database underneath..
 
 The application is implemented in the scope of Node.js course in RS School: [Task](https://github.com/AlreadyBored/nodejs-assignments/blob/main/assignments/crud-api/assignment.md)
+The API allows you to perform basic CRUD (Create, Read, Update, Delete) operations on user data. It is built using Node.js and uses an in-memory database (JSON file) for data storage.
+`supertest` and `node:test` is used for testing the API endpoints.
+
+## 📦 Technologies
+- Node.js
+- TypeScript
+- In-memory database (JSON file)
+- Clustering
+- ESLint
+- Prettier
+- Nodemon
+- dotenv
+- ts-node
+- supertest
 
 ## 🚀 Getting Started
 
@@ -21,14 +35,16 @@ git checkout develop
 ```bash
 npm install
 ```
-4. Create `.env` file
+4. Create `.env` file `[optional]`
 ```bash
 cp .env.example .env
 ```
-5. Set up environment variables in `.env` file
+5. Set up environment variables in `.env` file `[optional]`
 ```bash
-# Port for the application
+# Port for the application. If variable is not set, the default value will be used.
 PORT=3000
+# Path to the database file. If variable is not set, the default value will be used.
+DB_PATH="data/db.json"
 ```
 6. Start the application
 - in development mode
@@ -39,13 +55,18 @@ npm start:dev
 ```bash
 npm start:prod
 ```
-- in development mode with clustering
+- in development mode with clustering run the script and wait untill all servers start
 ```bash
 npm start:multi
 ```
-- in production mode with clustering
+- in production mode with clustering run the script and wait untill all servers start
 ```bash
 npm start:multi:prod
+```
+7. Use Postman or any other API client to test the API endpoints.
+8. To run tests, stop application to avoid appropriate error in console and run:
+```bash
+npm test
 ```
 
 ## 📦 API Endpoints
