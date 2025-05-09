@@ -1,6 +1,6 @@
 import { access, constants, readFile, writeFile } from 'node:fs/promises';
 import { randomUUID } from 'crypto';
-import { User } from '../models/user.model';
+import { User, UserDto } from '../models/user.model';
 import { removeLock, setLock } from './userDbLock.service';
 import { DB_PATH } from '../utils/paths';
 
@@ -11,7 +11,7 @@ export async function getUsers(): Promise<User[]> {
   return users;
 }
 
-export async function createUser(data: Omit<User, 'id'>): Promise<User> {
+export async function createUser(data: UserDto): Promise<User> {
   await setLock();
   const users = await readUsers();
   const newUser: User = { id: randomUUID(), ...data };
@@ -30,7 +30,7 @@ export async function getUserById(id: string): Promise<User | undefined> {
 
 export async function updateUserById(
   id: string,
-  data: Omit<User, 'id'>,
+  data: UserDto,
 ): Promise<User | undefined> {
   await setLock();
   const users = await readUsers();

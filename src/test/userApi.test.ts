@@ -1,15 +1,29 @@
 import { TEST_DB_PATH } from './testDbPath';
 process.env.DB_PATH = TEST_DB_PATH;
 
-import test, { after, before } from 'node:test';
+import test, { after, before, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import request from 'supertest';
 import fs from 'node:fs/promises';
 import { startServer } from '../server/startServer';
+import { UserDto } from '../models/user.model';
+import { VALIDATION_MESSAGES } from '../utils/messages';
 
 let server: Awaited<ReturnType<typeof startServer>>;
 let app: ReturnType<typeof request>;
 let createdUserId: string;
+
+const userDto: UserDto = {
+  username: 'Jane',
+  age: 25,
+  hobbies: ['hiking', 'reading', 'cycling'],
+};
+
+const updatedUserDto: UserDto = {
+  username: 'Jane Updated',
+  age: 26,
+  hobbies: ['hiking', 'reading', 'cycling'],
+};
 
 before(async () => {
   try {
@@ -33,47 +47,146 @@ after(async () => {
   server.close();
 });
 
-test('GET /api/users - should return empty array', async () => {
-  const res = await app.get('/api/users');
-  assert.equal(res.statusCode, 200);
-  assert.deepEqual(res.body, []);
+describe('Correct flow', () => {
+  test('GET /api/users - should return empty array', async () => {
+    const res = await app.get('/api/users');
+    assert.equal(res.statusCode, 200);
+    assert.deepEqual(res.body, []);
+  });
+  
+  test('POST /api/users - should create a new user', async () => {
+    const res = await app.post('/api/users').send(userDto);
+    assert.equal(res.statusCode, 201);
+    assert.ok(res.body.id);
+    createdUserId = res.body.id;
+  });
+  
+  test('GET /api/users/:id - should return created user', async () => {
+    const res = await app.get(`/api/users/${createdUserId}`);
+    assert.equal(res.statusCode, 200);
+    assert.deepEqual(res.body, { ...userDto, id: createdUserId });
+  });
+  
+  test('PUT /api/users/:id - should update user', async () => {
+    const res = await app.put(`/api/users/${createdUserId}`).send(updatedUserDto);
+    assert.equal(res.statusCode, 200);
+    assert.deepEqual(res.body, { ...updatedUserDto, id: createdUserId });
+  });
+  
+  test('DELETE /api/users/:id - should delete user', async () => {
+    const res = await app.delete(`/api/users/${createdUserId}`);
+    assert.equal(res.statusCode, 204);
+  });
+  
+  test('GET /api/users/:id - should return 404 for deleted user', async () => {
+    const res = await app.get(`/api/users/${createdUserId}`);
+    assert.equal(res.statusCode, 404);
+  });
 });
 
-test('POST /api/users - should create a new user', async () => {
-  const res = await app.post('/api/users').send({
-    username: 'Alice',
-    age: 25,
-    hobbies: ['reading', 'cycling'],
+describe('Flow with 404 status for all types of requests', () => {
+  test('GET /api/users - should return empty array', async () => {
+    const res = await app.get('/api/users');
+    assert.equal(res.statusCode, 200);
+    assert.deepEqual(res.body, []);
+  });
+  
+  test('GET /api/users/:id - should return 404 for not created user', async () => {
+    const res = await app.get(`/api/users/${createdUserId}`);
+    assert.equal(res.statusCode, 404);
+  });
+  
+  test('PUT /api/users/:id - should return 404 for not created user', async () => {
+    const res = await app.put(`/api/users/${createdUserId}`).send(updatedUserDto);
+    assert.equal(res.statusCode, 404);
+  });
+  
+  test('DELETE /api/users/:id - should return 404 for not created user', async () => {
+    const res = await app.delete(`/api/users/${createdUserId}`);
+    assert.equal(res.statusCode, 404);
+  });
+});
+
+describe('Flow with 400 status for GET, PUT, DELETE with invalid user Id', () => {
+  test('GET /api/users - should return empty array', async () => {
+    const res = await app.get('/api/users');
+    assert.equal(res.statusCode, 200);
+    assert.deepEqual(res.body, []);
+  });
+  
+  test('POST /api/users - should create a new user', async () => {
+    const res = await app.post('/api/users').send(userDto);
+    assert.equal(res.statusCode, 201);
+    assert.ok(res.body.id);
+    createdUserId = res.body.id;
+  });
+  
+  test('GET /api/users/:id - should return created user', async () => {
+    const res = await app.get(`/api/users/${createdUserId}`);
+    assert.equal(res.statusCode, 200);
+    assert.deepEqual(res.body, { ...userDto, id: createdUserId });
+  });
+  
+  test('GET /api/users/:id - should return 400 for invalid user Id', async () => {
+    const res = await app.get(`/api/users/createdUserId`);
+    assert.equal(res.statusCode, 400);
+    assert.equal(res.body.error, VALIDATION_MESSAGES.INVALID_ID('createdUserId'));
+
+  });
+  
+  test('PUT /api/users/:id - should return 400 for invalid user Id', async () => {
+    const res = await app.put(`/api/users/createdUserId`).send(updatedUserDto);
+    assert.equal(res.statusCode, 400);
+    assert.equal(res.body.error, VALIDATION_MESSAGES.INVALID_ID('createdUserId'));
+  });
+  
+  test('DELETE /api/users/:id - should return 400 for invalid user Id', async () => {
+    const res = await app.delete(`/api/users/createdUserId`);
+    assert.equal(res.statusCode, 400);
+    assert.equal(res.body.error, VALIDATION_MESSAGES.INVALID_ID('createdUserId'));
+  });
+    
+  test('DELETE /api/users/:id - should delete user', async () => {
+    const res = await app.delete(`/api/users/${createdUserId}`);
+    assert.equal(res.statusCode, 204);
+  });
+});
+
+describe('Flow with 400 status for POST, PUT with invalid body', () => {
+  test('GET /api/users - should return empty array', async () => {
+    const res = await app.get('/api/users');
+    assert.equal(res.statusCode, 200);
+    assert.deepEqual(res.body, []);
+  });
+  
+  test('POST /api/users - should return 400 for invalid user name', async () => {
+    const res = await app.post('/api/users').send({ ...userDto, username: '' });
+    assert.equal(res.statusCode, 400);
+    assert.equal(res.body.error, VALIDATION_MESSAGES.INVALID_USERNAME);
+  });
+  
+  test('POST /api/users - should return 400 for invalid user age', async () => {
+    const res = await app.post('/api/users').send({ ...userDto, age: '25' });
+    assert.equal(res.statusCode, 400);
+    assert.equal(res.body.error, VALIDATION_MESSAGES.INVALID_AGE);
   });
 
-  assert.equal(res.statusCode, 201);
-  assert.ok(res.body.id);
-  createdUserId = res.body.id;
-});
-
-test('GET /api/users/:id - should return created user', async () => {
-  const res = await app.get(`/api/users/${createdUserId}`);
-  assert.equal(res.statusCode, 200);
-  assert.equal(res.body.username, 'Alice');
-});
-
-test('PUT /api/users/:id - should update user', async () => {
-  const res = await app.put(`/api/users/${createdUserId}`).send({
-    username: 'Alice Updated',
-    age: 26,
-    hobbies: ['drawing'],
+  test('POST /api/users - should create a new user', async () => {
+    const res = await app.post('/api/users').send(userDto);
+    assert.equal(res.statusCode, 201);
+    assert.ok(res.body.id);
+    createdUserId = res.body.id;
   });
-
-  assert.equal(res.statusCode, 200);
-  assert.equal(res.body.username, 'Alice Updated');
-});
-
-test('DELETE /api/users/:id - should delete user', async () => {
-  const res = await app.delete(`/api/users/${createdUserId}`);
-  assert.equal(res.statusCode, 204);
-});
-
-test('GET /api/users/:id - should return 404 for deleted user', async () => {
-  const res = await app.get(`/api/users/${createdUserId}`);
-  assert.equal(res.statusCode, 404);
+  
+  test('PUT /api/users/:id - should return 400 for invalid user hobbies array', async () => {
+    const res = await app.put(`/api/users/${createdUserId}`).send({ ...userDto, hobbies: [0] });
+    assert.equal(res.statusCode, 400);
+    assert.equal(res.body.error, VALIDATION_MESSAGES.INVALID_HOBBIES);
+  });
+  
+  test('PUT /api/users/:id - should return 400 for invalid user hobbies', async () => {
+    const res = await app.put(`/api/users/${createdUserId}`).send({ ...userDto, hobbies: null });
+    assert.equal(res.statusCode, 400);
+    assert.equal(res.body.error, VALIDATION_MESSAGES.INVALID_HOBBIES);
+  });
 });

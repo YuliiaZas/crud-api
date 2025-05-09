@@ -17,3 +17,10 @@ export const MESSAGES = {
   REQUEST: (pid: number, port: number) =>
     `[WORKER ${pid}] Request handled on PORT ${port}`,
 } as const;
+
+export const VALIDATION_MESSAGES = {
+  INVALID_ID: (id: string) => `Invalid ID format: ${id}`,
+  INVALID_USERNAME: 'Invalid username. Username must be a non-empty string.',
+  INVALID_AGE: 'Invalid age. Age must be a positive number.',
+  INVALID_HOBBIES: 'Invalid hobbies. Hobbies must be an array of string.',
+} as const;
