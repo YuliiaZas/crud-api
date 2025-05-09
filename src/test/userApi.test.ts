@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import request from 'supertest';
 import fs from 'node:fs/promises';
 import { startServer } from '../server/startServer';
-import { VALIDATION_MESSAGES } from '../utils/messages';
+import { SERVER_MESSAGES, VALIDATION_MESSAGES } from '../utils/messages';
 import { Status } from '../utils/status.enum';
 import { apiUrl, updatedUserDto, userDto } from './testConstants';
 
@@ -193,5 +193,43 @@ describe(`Flow with ${Status.BAD_REQUEST} status for POST, PUT with invalid body
       .send({ ...userDto, hobbies: null });
     assert.equal(res.statusCode, Status.BAD_REQUEST);
     assert.equal(res.body.error, VALIDATION_MESSAGES.INVALID_HOBBIES);
+  });
+});
+
+describe(`Flow with ${Status.BAD_REQUEST} status for unsupported url`, () => {
+  test(`GET /api - should return ${Status.NOT_FOUND}`, async () => {
+    const res = await app.get('/api');
+    assert.equal(res.statusCode, Status.NOT_FOUND);
+    assert.equal(res.body.error, SERVER_MESSAGES.NOT_FOUND);
+  });
+
+  test(`GET /api/test - should return ${Status.NOT_FOUND}`, async () => {
+    const res = await app.get('/api/user');
+    assert.equal(res.statusCode, Status.NOT_FOUND);
+    assert.equal(res.body.error, SERVER_MESSAGES.NOT_FOUND);
+  });
+
+  test(`GET ${apiUrl}user/1 - should return ${Status.NOT_FOUND}`, async () => {
+    const res = await app.get(`${apiUrl}user/1`);
+    assert.equal(res.statusCode, Status.NOT_FOUND);
+    assert.equal(res.body.error, SERVER_MESSAGES.NOT_FOUND);
+  });
+
+  test(`POST ${apiUrl}1 - should return ${Status.NOT_FOUND}`, async () => {
+    const res = await app.post(`${apiUrl}1`);
+    assert.equal(res.statusCode, Status.NOT_FOUND);
+    assert.equal(res.body.error, SERVER_MESSAGES.NOT_FOUND);
+  });
+
+  test(`PUT ${apiUrl} - should return ${Status.NOT_FOUND}`, async () => {
+    const res = await app.put(apiUrl);
+    assert.equal(res.statusCode, Status.NOT_FOUND);
+    assert.equal(res.body.error, `${SERVER_MESSAGES.NOT_FOUND} (${VALIDATION_MESSAGES.UNDEFINED_ID})`);
+  });
+
+  test(`DELETE ${apiUrl} - should return ${Status.NOT_FOUND}`, async () => {
+    const res = await app.delete(apiUrl);
+    assert.equal(res.statusCode, Status.NOT_FOUND);
+    assert.equal(res.body.error, `${SERVER_MESSAGES.NOT_FOUND} (${VALIDATION_MESSAGES.UNDEFINED_ID})`);
   });
 });
