@@ -3,8 +3,10 @@ import { sendJson } from './response';
 import { Status } from './status.enum';
 import { SERVER_MESSAGES } from './messages';
 
-export function notFoundHandler(res: ServerResponse) {
-  sendJson(res, Status.NOT_FOUND, { error: SERVER_MESSAGES.NOT_FOUND });
+export function notFoundHandler(res: ServerResponse, msg?: string) {
+  sendJson(res, Status.NOT_FOUND, {
+    error: `${SERVER_MESSAGES.NOT_FOUND}${msg ? ` (${msg})` : ''}`,
+  });
 }
 
 export function badRequestHandler(

@@ -1,5 +1,4 @@
 import { IncomingMessage, ServerResponse } from 'node:http';
-import { parse } from 'node:url';
 import { badRequestHandler, notFoundHandler } from '../utils/errorHandler';
 import { parseRequestBody } from '../middlewares/parseBody.middleware';
 import {
@@ -9,53 +8,54 @@ import {
   handleUpdateUserById,
   handleDeleteUserById,
 } from '../controllers/user.controller';
-import { InvalidBodyError, InvalidIdError } from '../utils/errors';
+import {
+  InvalidBodyError,
+  InvalidIdError,
+  NotFoundError,
+} from '../utils/errors';
 import { validateId } from '../utils/validate';
+import { VALIDATION_MESSAGES } from '../utils/messages';
 
 export async function handleUserRoutes(
   req: IncomingMessage,
   res: ServerResponse,
+  id: string | undefined,
 ) {
-  const parsedUrl = parse(req.url ?? '', true);
-  const pathParts = parsedUrl.pathname?.split('/').filter(Boolean) || [];
   const method = req.method || 'GET';
 
   try {
-    if (pathParts.length === 2 && pathParts[1] === 'users') {
-      if (method === 'GET') {
-        await handleGetAllUsers(res);
+    switch (method) {
+      case 'GET':
+        await (id
+          ? handleGetUserById(res, validateId(id))
+          : handleGetAllUsers(res));
         return;
-      }
-      if (method === 'POST') {
-        const body = await parseRequestBody(req);
-        await handleCreateUser(res, body);
+      case 'POST':
+        if (id) throw new NotFoundError();
+        await handleCreateUser(res, await parseRequestBody(req));
         return;
-      }
-    } else if (pathParts.length === 3 && pathParts[1] === 'users') {
-      if (method !== 'GET' && method !== 'PUT' && method !== 'DELETE') {
-        notFoundHandler(res);
+      case 'PUT':
+        if (!id) throw new NotFoundError(VALIDATION_MESSAGES.UNDEFINED_ID);
+        await handleUpdateUserById(
+          res,
+          validateId(id),
+          await parseRequestBody(req),
+        );
         return;
-      }
-      const userId = validateId(pathParts[2]);
-
-      if (method === 'GET') {
-        await handleGetUserById(res, userId);
+      case 'DELETE':
+        if (!id) throw new NotFoundError(VALIDATION_MESSAGES.UNDEFINED_ID);
+        await handleDeleteUserById(res, validateId(id));
         return;
-      }
-      if (method === 'PUT') {
-        const body = await parseRequestBody(req);
-        await handleUpdateUserById(res, userId, body);
-        return;
-      }
-      if (method === 'DELETE') {
-        await handleDeleteUserById(res, userId);
-        return;
-      }
+      default:
+        throw new NotFoundError();
     }
-
-    notFoundHandler(res);
   } catch (error: unknown) {
-    if (error instanceof InvalidBodyError || error instanceof InvalidIdError) {
+    if (error instanceof NotFoundError) {
+      notFoundHandler(res, error.message);
+    } else if (
+      error instanceof InvalidBodyError ||
+      error instanceof InvalidIdError
+    ) {
       badRequestHandler(res, error.message);
     } else {
       throw error;

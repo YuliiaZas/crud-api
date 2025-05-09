@@ -18,9 +18,9 @@ export function validateUser(user: User): User {
   return user;
 }
 
-export function validateId(id: string): string {
+export function validateId(id: string | undefined): string {
   const idPattern = /^[a-fA-F0-9\-]{36}$/;
-  if (!idPattern.test(id)) {
+  if (!id || !idPattern.test(id)) {
     throw new InvalidIdError(VALIDATION_MESSAGES.INVALID_ID(id));
   }
   return id;
