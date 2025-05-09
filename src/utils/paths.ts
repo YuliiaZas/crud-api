@@ -1,4 +1,4 @@
-import { isAbsolute, join } from "node:path";
+import { isAbsolute, join } from 'node:path';
 import dotenv from 'dotenv';
 
 dotenv.config();

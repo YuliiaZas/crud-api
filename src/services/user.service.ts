@@ -68,7 +68,9 @@ async function readUsers(): Promise<User[]> {
     return JSON.parse(data || '[]');
   } catch (error: unknown) {
     if ((error as { code?: string }).code === 'ENOENT') {
-      console.log('Database file not found while reading. Creating a new one...');
+      console.log(
+        'Database file not found while reading. Creating a new one...',
+      );
       await writeUsers([]);
       return [];
     }

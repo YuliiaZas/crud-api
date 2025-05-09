@@ -15,7 +15,10 @@ before(async () => {
   try {
     server = await startServer();
   } catch (error) {
-    console.error('Error during starting tests:', (error as {message?: string}).message ?? error);
+    console.error(
+      'Error during starting tests:',
+      (error as { message?: string }).message ?? error,
+    );
     process.exit(1);
   }
   app = request(server);
@@ -29,7 +32,6 @@ after(async () => {
   } catch {}
   server.close();
 });
-
 
 test('GET /api/users - should return empty array', async () => {
   const res = await app.get('/api/users');
