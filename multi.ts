@@ -6,7 +6,7 @@ import { getPort } from './src/utils/port';
 import { app } from './src/app';
 import { badGatewayHandler } from './src/utils/errorHandler';
 import { WorkerInfo } from './src/utils/types';
-import { initEmptyDb } from './src/services/user.service';
+import { ensureDbExists } from './src/services/user.service';
 import { MESSAGES } from './src/utils/messages';
 
 if (cluster.isPrimary) {
@@ -41,7 +41,7 @@ async function startPrimaryProcess() {
   const ports: number[] = [];
   let currentPortIndex = 0;
 
-  await initEmptyDb();
+  await ensureDbExists();
 
   for (let i = 1; i <= WORKERS_COUNT; i++) {
     forkWorker(HOST_PORT + i);

@@ -1,7 +1,5 @@
 import { promises as fs } from 'fs';
-import { join } from 'path';
-
-const LOCK_PATH = join(__dirname, '../data/db.lock');
+import { LOCK_PATH } from '../utils/paths';
 
 export async function setLock(retries = 10, delay = 50): Promise<void> {
   for (let i = 0; i < retries; i++) {

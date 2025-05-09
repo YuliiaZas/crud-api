@@ -1,10 +1,8 @@
-import { readFile, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { access, constants, readFile, writeFile } from 'node:fs/promises';
 import { randomUUID } from 'crypto';
 import { User } from '../models/user.model';
-import { removeLock, setLock } from '../data/lock';
-
-const FILE_PATH = join(__dirname, '../data/db.json');
+import { removeLock, setLock } from './userDbLock.service';
+import { DB_PATH } from '../utils/paths';
 
 export async function getUsers(): Promise<User[]> {
   await setLock();
@@ -65,21 +63,28 @@ export async function deleteUserById(id: string): Promise<boolean> {
 }
 
 async function readUsers(): Promise<User[]> {
-  const data = await readFile(FILE_PATH, 'utf-8');
-  return JSON.parse(data || '[]');
+  try {
+    const data = await readFile(DB_PATH, 'utf-8');
+    return JSON.parse(data || '[]');
+  } catch (error: unknown) {
+    if ((error as { code?: string }).code === 'ENOENT') {
+      console.log('Database file not found while reading. Creating a new one...');
+      await writeUsers([]);
+      return [];
+    }
+    throw error;
+  }
 }
 
 async function writeUsers(users: User[]): Promise<void> {
-  await writeFile(FILE_PATH, JSON.stringify(users, null, 2));
+  await writeFile(DB_PATH, JSON.stringify(users, null, 2));
 }
 
-export async function initEmptyDb(): Promise<void> {
-  console.log('Initializing empty database...');
+export async function ensureDbExists(): Promise<void> {
   try {
-    await setLock();
+    await access(DB_PATH, constants.F_OK);
+  } catch {
+    console.log('Database file does not exist. Creating a new one...');
     await writeUsers([]);
-    await removeLock();
-  } catch (err: unknown) {
-    console.error('Error initializing database:', err);
   }
 }
