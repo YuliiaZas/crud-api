@@ -22,7 +22,7 @@ export async function handleUserRoutes(
     __dirname,
     '..',
     'controllers',
-    `user.controller.${isMultiMode ? 'multi' : 'mono'}.ts`,
+    `user.controller.${isMultiMode ? 'multi' : 'mono'}`,
   );
   const {
     handleGetAllUsers,
