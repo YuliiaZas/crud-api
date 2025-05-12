@@ -17,7 +17,7 @@ if (cluster.isPrimary) {
     //   console.log(`[WORKER ${process.pid}] 💣 Simulating crash...`);
     //   process.exit(1);
     // }
-    app(req, res);
+    app(req, res, true);
   });
 
   server.listen(workerPort, () =>

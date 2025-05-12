@@ -1,4 +1,4 @@
-import { UserDto } from "../models/user.model";
+import { UserDto } from '../models/user.model';
 
 export const userDto: UserDto = {
   username: 'Jane',

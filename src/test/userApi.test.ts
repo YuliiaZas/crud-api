@@ -1,10 +1,6 @@
-import { TEST_DB_PATH } from './testDbPath';
-process.env.DB_PATH = TEST_DB_PATH;
-
 import test, { after, before, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import request from 'supertest';
-import fs from 'node:fs/promises';
 import { startServer } from '../server/startServer';
 import { SERVER_MESSAGES, VALIDATION_MESSAGES } from '../utils/messages';
 import { Status } from '../utils/status.enum';
@@ -28,11 +24,6 @@ before(async () => {
 });
 
 after(async () => {
-  try {
-    await fs.unlink(process.env.DB_PATH!);
-    console.log('Test database removed');
-    await fs.unlink(`${process.env.DB_PATH}.lock`);
-  } catch {}
   server.close();
 });
 
@@ -57,9 +48,7 @@ describe('Correct flow', () => {
   });
 
   test(`PUT ${apiUrl}:id - should update user`, async () => {
-    const res = await app
-      .put(`${apiUrl}${createdUserId}`)
-      .send(updatedUserDto);
+    const res = await app.put(`${apiUrl}${createdUserId}`).send(updatedUserDto);
     assert.equal(res.statusCode, Status.OK);
     assert.deepEqual(res.body, { ...updatedUserDto, id: createdUserId });
   });
@@ -88,9 +77,7 @@ describe(`Flow with ${Status.NOT_FOUND} status for all types of requests`, () =>
   });
 
   test(`PUT ${apiUrl}:id - should return ${Status.NOT_FOUND} for not created user`, async () => {
-    const res = await app
-      .put(`${apiUrl}${createdUserId}`)
-      .send(updatedUserDto);
+    const res = await app.put(`${apiUrl}${createdUserId}`).send(updatedUserDto);
     assert.equal(res.statusCode, Status.NOT_FOUND);
   });
 
@@ -224,12 +211,18 @@ describe(`Flow with ${Status.BAD_REQUEST} status for unsupported url`, () => {
   test(`PUT ${apiUrl} - should return ${Status.NOT_FOUND}`, async () => {
     const res = await app.put(apiUrl);
     assert.equal(res.statusCode, Status.NOT_FOUND);
-    assert.equal(res.body.error, `${SERVER_MESSAGES.NOT_FOUND} (${VALIDATION_MESSAGES.UNDEFINED_ID})`);
+    assert.equal(
+      res.body.error,
+      `${SERVER_MESSAGES.NOT_FOUND} (${VALIDATION_MESSAGES.UNDEFINED_ID})`,
+    );
   });
 
   test(`DELETE ${apiUrl} - should return ${Status.NOT_FOUND}`, async () => {
     const res = await app.delete(apiUrl);
     assert.equal(res.statusCode, Status.NOT_FOUND);
-    assert.equal(res.body.error, `${SERVER_MESSAGES.NOT_FOUND} (${VALIDATION_MESSAGES.UNDEFINED_ID})`);
+    assert.equal(
+      res.body.error,
+      `${SERVER_MESSAGES.NOT_FOUND} (${VALIDATION_MESSAGES.UNDEFINED_ID})`,
+    );
   });
 });

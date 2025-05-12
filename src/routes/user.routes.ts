@@ -2,26 +2,35 @@ import { IncomingMessage, ServerResponse } from 'node:http';
 import { badRequestHandler, notFoundHandler } from '../utils/errorHandler';
 import { parseRequestBody } from '../middlewares/parseBody.middleware';
 import {
-  handleGetAllUsers,
-  handleCreateUser,
-  handleGetUserById,
-  handleUpdateUserById,
-  handleDeleteUserById,
-} from '../controllers/user.controller';
-import {
   InvalidBodyError,
   InvalidIdError,
   NotFoundError,
 } from '../utils/errors';
 import { validateId } from '../utils/validate';
 import { VALIDATION_MESSAGES } from '../utils/messages';
+import { join } from 'node:path';
 
 export async function handleUserRoutes(
   req: IncomingMessage,
   res: ServerResponse,
   id: string | undefined,
+  isMultiMode: boolean = false,
 ) {
   const method = req.method || 'GET';
+
+  const controllerPath = join(
+    __dirname,
+    '..',
+    'controllers',
+    `user.controller.${isMultiMode ? 'multi' : 'mono'}.ts`,
+  );
+  const {
+    handleGetAllUsers,
+    handleCreateUser,
+    handleGetUserById,
+    handleUpdateUserById,
+    handleDeleteUserById,
+  } = await import(controllerPath);
 
   try {
     switch (method) {
