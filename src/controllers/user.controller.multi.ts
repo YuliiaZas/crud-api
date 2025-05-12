@@ -1,18 +1,18 @@
 import { ServerResponse } from 'http';
 import {
-  getUsers,
+  getAllUsers,
   getUserById,
   createUser,
   updateUserById,
   deleteUserById,
-} from '../services/user.service';
+} from '../services/user.service.multi';
 import { sendJson, sendEmpty, sendNotFound } from '../utils/response';
 import { validateUser } from '../utils/validate';
 import { User } from '../models/user.model';
 import { Status } from '../utils/status.enum';
 
 export async function handleGetAllUsers(res: ServerResponse) {
-  sendJson(res, Status.OK, await getUsers());
+  sendJson(res, Status.OK, await getAllUsers());
 }
 
 export async function handleGetUserById(res: ServerResponse, id: string) {

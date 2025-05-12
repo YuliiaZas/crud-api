@@ -1,9 +1,8 @@
 import cluster from 'node:cluster';
 import { cpus } from 'node:os';
 import { getPort } from '../utils/port';
-import { WorkerInfo } from '../utils/types';
+import { WorkerInfo, WorkerMessage } from '../utils/types';
 import { MESSAGES } from '../utils/messages';
-import { ensureDbExists } from '../services/user.service';
 import { createBalancer } from './createBalancer';
 import { forkWorker } from './forkWorker';
 
@@ -22,13 +21,29 @@ export async function startPrimaryProcess() {
     currentPortIndex = (currentPortIndex + 1) % ports.length;
     return port;
   }
+  const dataWorker = forkWorker(HOST_PORT + 1, workerMapById, { isDataWorker: true});
 
-  await ensureDbExists();
-
-  for (let i = 1; i <= WORKERS_COUNT; i++) {
+  for (let i = 2; i <= WORKERS_COUNT; i++) {
     forkWorker(HOST_PORT + i, workerMapById);
     ports.push(HOST_PORT + i);
   }
+
+  cluster.on('message', (worker, message) => {
+    if (message?.type === 'dataRequest') {
+      const { requestId, action, payload } = message as WorkerMessage;
+  
+      dataWorker.send({ action, payload, requestId });
+  
+      const handleDataResponse = (response: any) => {
+        if (response.requestId === requestId) {
+          worker.send(response);
+          dataWorker.off('message', handleDataResponse);
+        }
+      };
+  
+      dataWorker.on('message', handleDataResponse);
+    }
+  });
 
   cluster.on('online', (worker) => {
     console.log(MESSAGES.WORKER_ONLINE(worker.process.pid!));
@@ -56,7 +71,7 @@ export async function startPrimaryProcess() {
       if (attempts < MAX_RESTARTS) {
         console.log(MESSAGES.WORKER_RESTART(port, attempts));
         workerMapById.delete(worker.id);
-        forkWorker(port, workerMapById, attempts + 1);
+        forkWorker(port, workerMapById, { attempts: attempts + 1 });
       } else {
         console.error(MESSAGES.MAX_RESTART_REACHED(port));
         ports.splice(ports.indexOf(port), 1);

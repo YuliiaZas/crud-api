@@ -5,7 +5,7 @@ export const MESSAGES = {
     `[Balancer Error] ❌ Worker on PORT ${currentPort} failed:`,
   WORKER_ONLINE: (pid: number) => `[PRIMARY] Worker ${pid} is online`,
   WORKERS_ALL: (workers: number) =>
-    `[PRIMARY] 👷 All ${workers} workers are online. Please wait for the servers`,
+    `[PRIMARY] 👷 All ${workers} workers are online. Please wait for ${workers - 1} servers`,
   WORKER_RESTART: (port: number, attempts: number) =>
     `[PRIMARY] 🔁 Restarting worker on PORT ${port} (attempt ${attempts + 1})...`,
   MAX_RESTART_REACHED: (port: number) =>
