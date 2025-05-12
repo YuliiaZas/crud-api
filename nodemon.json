@@ -1,0 +1,5 @@
+{
+  "ignore": ["node_modules/**", "build/**", "src/test/**"],
+  "exec": "ts-node index.ts",
+  "watch": ["index.ts", "src/**", "package.json", "tsconfig.json"]
+}
