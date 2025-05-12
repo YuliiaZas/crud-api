@@ -7,7 +7,6 @@ let users: User[] = [];
 process.on('message', (message: WorkerMessage) => {
   const { action, payload, requestId } = message;
 
-  console.log('Received message from master:', action, payload, requestId);
   try {
     switch (action) {
       case 'getAllUsers':

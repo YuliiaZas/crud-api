@@ -2,7 +2,6 @@ import { sendToDataWorker } from '../database/dataClient';
 import { UserDto } from '../models/user.model';
 
 export async function getAllUsers() {
-  console.log('Fetching all users - service');
   return sendToDataWorker('getAllUsers');
 }
 
