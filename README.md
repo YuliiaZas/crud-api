@@ -3,14 +3,14 @@
 This project is a simple CRUD API using in-memory database underneath..
 
 The application is implemented in the scope of Node.js course in RS School: [Task](https://github.com/AlreadyBored/nodejs-assignments/blob/main/assignments/crud-api/assignment.md)
-The API allows you to perform basic CRUD (Create, Read, Update, Delete) operations on user data. It is built using Node.js and uses an in-memory database (JSON file) for data storage.
+The API allows you to perform basic CRUD (Create, Read, Update, Delete) operations on user data. It is built using Node.js and uses an in-memory database for data storage.
 `supertest` and `node:test` is used for testing the API endpoints.
 
 ## 📦 Technologies
 
 - Node.js
 - TypeScript
-- In-memory database (JSON file)
+- In-memory database
 - Clustering
 - ESLint
 - Prettier
